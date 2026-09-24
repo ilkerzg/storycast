@@ -1,0 +1,159 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #fcfcfc;
+  --foreground: #0b0b0b;
+  --card: #f5f5f5;
+  --muted-foreground: #636363;
+  --border: #0b0b0b0f;
+  --border-strong: #0b0b0b1f;
+  --accent-fg: #0b0b0b;
+  --danger: #ee343b;
+  --success: #00bd6c;
+  --warning: #f5a500;
+  --glass-bg: #fcfcfc8c;
+  --glass-border: #0b0b0b14;
+  --glass-strong-bg: #ffffffb3;
+  --gradient-accent: linear-gradient(to right, #00bebf 0%, #a37aff 100%);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: #0285f7;
+  --primary-foreground: #ffffff;
+  --secondary: var(--card);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--card);
+  --accent: #00bebf;
+  --accent-foreground: var(--accent-fg);
+  --destructive: var(--danger);
+  --input: var(--border);
+  --ring: var(--border-strong);
+  --tilt-glare: #ffffff;
+}
+
+.dark {
+  --background: #151515;
+  --foreground: #f2f2f2;
+  --card: #1c1c1c;
+  --muted-foreground: #868686;
+  --border: #ffffff0d;
+  --border-strong: #ffffff1a;
+  --accent: #00dadb;
+  --accent-fg: #151515;
+  --glass-bg: #1c1c1c8c;
+  --glass-border: #ffffff14;
+  --glass-strong-bg: #1c1c1c99;
+  --gradient-accent: linear-gradient(to right, #00dadb 0%, #ad8cff 100%);
+  --tilt-glare: var(--foreground);
+}
+
+@theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-glass: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.gradient-ring {
+  position: relative;
+  isolation: isolate;
+}
+.gradient-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient-accent);
+  opacity: 0.55;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+@keyframes marquee {
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+@keyframes marquee-vertical {
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+@utility animate-marquee {
+  animation: marquee 40s linear infinite;
+}
+@utility animate-marquee-vertical {
+  animation: marquee-vertical 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-vertical {
+    animation-play-state: paused;
+  }
+}
+@layer base {
+  body *:not(html) {
+    scrollbar-width: none;
+  }
+  body *::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="sc-a" x1="10" y1="11" x2="30" y2="51" gradientUnits="userSpaceOnUse"><stop stop-color="#FFA23A"/><stop offset="1" stop-color="#FF6A2B"/></linearGradient>
+    <linearGradient id="sc-b" x1="36" y1="18" x2="52" y2="50" gradientUnits="userSpaceOnUse"><stop stop-color="#FF5A7A"/><stop offset="1" stop-color="#E8336B"/></linearGradient>
+    <mask id="sc-eyes" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+      <rect width="64" height="64" fill="#fff"/>
+      <circle cx="26.5" cy="19.5" r="2.4" fill="#000"/>
+      <circle cx="40.2" cy="24.6" r="1.9" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#sc-eyes)">
+    <path d="M32.00 22.00C32.00 38.50 23.75 47.85 11.65 50.60C18.80 42.35 21.55 36.85 21.00 33.00A11 11 0 1 1 32.00 22.00Z" fill="url(#sc-a)"/>
+    <path d="M35.50 27.00C35.50 39.75 41.88 46.98 51.23 49.10C45.70 42.73 43.58 38.48 44.00 35.50A8.5 8.5 0 1 0 35.50 27.00Z" fill="url(#sc-b)"/>
+  </g>
+</svg>

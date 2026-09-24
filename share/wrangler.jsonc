@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "storycast-share",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  "vars": {
+    "ALLOWED_ORIGINS": "https://storycast-fawn.vercel.app"
+  },
+  "d1_databases": [{ "binding": "DB", "database_name": "storycast", "database_id": "39d9cafe-1e16-49e8-bb3e-cfe9455ead69" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "storycast-media" }],
+  "ratelimits": [{ "name": "VOICE_LIMIT", "namespace_id": "1001", "simple": { "limit": 60, "period": 60 } }]
+}

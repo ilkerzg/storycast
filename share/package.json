@@ -1,0 +1,18 @@
+{
+  "name": "storycast-share",
+  "version": "1.0.0",
+  "description": "Storycast sharing API: Cloudflare Worker + D1 + R2",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc",
+    "db:init": "wrangler d1 execute storycast --remote --file schema.sql"
+  },
+  "type": "commonjs",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260917.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.133.0"
+  },
+  "private": true
+}
