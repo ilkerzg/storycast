@@ -77,7 +77,6 @@ Everything runs in your browser with your own fal key.
 | On-camera lines | [`minimax/h3-max/lip-sync/image-to-video`](https://fal.ai/models/minimax/h3-max/lip-sync/image-to-video) |
 | Narration | [`fal-ai/elevenlabs/tts/eleven-v3`](https://fal.ai/models/fal-ai/elevenlabs/tts/eleven-v3) |
 | Score | [`elevenlabs/music/v2.5`](https://fal.ai/models/elevenlabs/music/v2.5) |
-| Shot sound | [`fal-ai/sam-audio/separate`](https://fal.ai/models/fal-ai/sam-audio/separate) |
 | Edit | [`fal-ai/workflow-utilities/trim-video`](https://fal.ai/models/fal-ai/workflow-utilities/trim-video) and `fal-ai/ffmpeg-api` (extract-frame, merge-videos, images-to-video, compose, loudnorm, merge-audio-video) |
 | Subtitles | [`fal-ai/workflow-utilities/auto-subtitle`](https://fal.ai/models/fal-ai/workflow-utilities/auto-subtitle) |
 

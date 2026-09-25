@@ -19,7 +19,6 @@ export const COMPOSE = "fal-ai/ffmpeg-api/compose";
 export const LOUDNORM = "fal-ai/ffmpeg-api/loudnorm";
 export const MERGE_AV = "fal-ai/ffmpeg-api/merge-audio-video";
 export const SUBTITLE = "fal-ai/workflow-utilities/auto-subtitle";
-export const SEPARATE = "fal-ai/sam-audio/separate";
 export const FRAME_AT = "fal-ai/ffmpeg-api/extract-frame";
 export const VISION = "openrouter/router/vision";
 export const CHECKER = "google/gemini-3.8-flash";
@@ -38,7 +37,6 @@ export const PULL_BACK =
   " The character stays small in the lower half of the frame; the camera never moves closer, it slowly pulls back, keeping the upper half of the frame calm open space.";
 
 export const CHARACTER_REF_NOTE = "Image 1 is the character: keep its design, proportions, colors and props exactly.";
-export const SPEECH_PROMPT = "people talking, human speech and voices";
 export const SHEET_CHECK_SYSTEM = "You are a strict film quality checker. Answer with JSON only.";
 export const SHEET_CHECK_PROMPT =
   "Image 1 is a character model sheet (the same character drawn several times). The other images are frames from a " +
@@ -120,7 +118,6 @@ type Spec = {
   key_url?: string;
   clip_url?: string;
   clip_dur?: number;
-  raw_url?: string;
   reshot?: boolean;
   checked?: boolean;
 };
@@ -528,17 +525,8 @@ export class Film {
         await this.oneShot(spec, i);
         this.log("shots", `Refilmed shot ${spec.shot}`);
       }
-      spec.raw_url ??= spec.clip_url;
-      const sep = await run<{ residual: { url: string } }>(SEPARATE, {
-        audio_url: spec.raw_url,
-        prompt: SPEECH_PROMPT,
-        output_format: "mp3",
-        acceleration: "fast",
-      });
-      spec.clip_url = (await run<{ video: { url: string } }>(MERGE_AV, { video_url: spec.raw_url, audio_url: sep.residual.url })).video.url;
     } catch (e) {
       if (!(e instanceof FalError) || isKeyError(e)) throw e;
-      spec.clip_url ??= spec.raw_url;
     }
     spec.checked = true;
     this.checkpoint();
@@ -635,6 +623,7 @@ export class Film {
 
   async assemble() {
     const p = this.plan;
+    for (const b of p.blocks) if (!b.audio_url || !(b.audio_dur! > 0)) await this.tts(b, true);
     const { starts, segments, pictureEnd } = this.timeline();
     const total = pictureEnd + END_CARD;
     this.log("assemble", `Cutting ${segments.length} shots on fal (trim + merge + compose)…`);
@@ -645,10 +634,7 @@ export class Film {
 
     const tracks = [
       { id: "picture", type: "video", keyframes: [{ timestamp: 0, duration: ms(total), url: picture }] },
-      { id: "picture-sound", type: "audio", keyframes: [{ timestamp: 0, duration: ms(total), url: picture }] },
-      ...p.blocks
-        .filter((b) => b.kind === "V")
-        .map((b) => ({ id: `vo-${b.id}`, type: "audio", keyframes: [{ timestamp: ms(starts[b.id]), duration: ms(b.audio_dur!), url: b.audio_url }] })),
+      ...p.blocks.map((b) => ({ id: `vo-${b.id}`, type: "audio", keyframes: [{ timestamp: ms(starts[b.id]), duration: ms(b.audio_dur!), url: b.audio_url }] })),
       { id: "music", type: "audio", keyframes: [{ timestamp: 0, duration: ms(total), url: this.st.music_url }] },
     ];
     const composed = (await run<{ video_url: string }>(COMPOSE, { tracks })).video_url;

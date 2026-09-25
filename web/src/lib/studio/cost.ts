@@ -6,7 +6,6 @@ const PRICE = {
   image: 0.045,
   voice: 0.0001,
   music: 0.6,
-  separate: 0.05 / 30,
   check: 0.03,
 };
 const WORDS_PER_SECOND = 2.25;
@@ -28,7 +27,7 @@ export function estimateCost(minutes: number, invent = false, resolution = "768P
   const video = (r2v + lipsync) * (VIDEO[resolution] ?? PRICE.video);
   const images = (n + 2 + (invent ? 2 : 0)) * PRICE.image;
   const sound = (v * vSpeech + t * tSpeech) * CHARS_PER_SECOND * PRICE.voice + (Math.max(30, seconds + 3) / 60) * PRICE.music;
-  const direction = 0.3 + 0.15 * minutes + r2v * PRICE.separate + (v + 1) * PRICE.check + 0.05 * minutes;
+  const direction = 0.3 + 0.15 * minutes + (v + 1) * PRICE.check + 0.05 * minutes;
   return { total: video + images + sound + direction, video, images, sound, direction, seconds };
 }
 
