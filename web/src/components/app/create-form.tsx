@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Clapperboard, ImagePlus, Lightbulb, Loader2, UserRound, X } from "lucide-react";
+import { Clapperboard, Clock, Coins, ImagePlus, Lightbulb, Loader2, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { setAgentContext } from "@/lib/agent";
 import { StatefulButton, type ButtonState } from "@/components/motion/button/stateful";
@@ -142,6 +142,12 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
   });
   const member = choice.kind === "cast" ? config.characters.find((c) => c.id === choice.id) : undefined;
   const [submit, setSubmit] = useState<ButtonState>("idle");
+  const [confirm, setConfirm] = useState(false);
+  const changeMinutes = (m: number) => {
+    setMinutes(m);
+    setConfirm(false);
+  };
+  const eta = Math.round(4 + 1.5 * minutes);
 
   useEffect(() => {
     setAgentContext({
@@ -185,7 +191,7 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
     }
   }
 
-  async function go() {
+  async function go(confirmed = false) {
     if (!topic.trim()) {
       setTopicError("Give the film a topic first");
       return;
@@ -198,6 +204,11 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
       onError("Upload your character first");
       return;
     }
+    if (minutes >= 2 && !confirmed) {
+      setConfirm(true);
+      return;
+    }
+    setConfirm(false);
     setSubmit("loading");
     try {
       await onStart({
@@ -268,10 +279,10 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div>
             <Label aside={<span className="font-mono text-xs"><NumberTicker value={minutes} /> min</span>}>Length</Label>
-            <RangeSlider min={1} max={config.max_minutes} step={1} value={minutes} onValueChange={setMinutes} aria-label="Length in minutes" formatValueText={(v) => `${v} minutes`} />
+            <RangeSlider min={1} max={config.max_minutes} step={1} value={minutes} onValueChange={changeMinutes} aria-label="Length in minutes" formatValueText={(v) => `${v} minutes`} />
             <div className="mt-1 flex justify-between px-[7px] font-mono text-[10px] text-muted-foreground">
               {Array.from({ length: config.max_minutes }, (_, i) => (
-                <button key={i} type="button" onClick={() => setMinutes(i + 1)} className={cn("w-3 text-center transition-colors hover:text-foreground", minutes === i + 1 && "text-foreground")}>
+                <button key={i} type="button" onClick={() => changeMinutes(i + 1)} className={cn("w-3 text-center transition-colors hover:text-foreground", minutes === i + 1 && "text-foreground")}>
                   {i + 1}
                 </button>
               ))}
@@ -331,11 +342,60 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
         </div>
 
         <div className="mt-auto flex flex-col gap-2 border-t border-border pt-5">
-          <StatefulButton size="lg" state={submit} onClick={go} loadingText="Starting" successText="Rolling" icon={<Clapperboard className="size-4" />} className="w-full">
-            Make the film
-          </StatefulButton>
+          <AnimatePresence initial={false} mode="popLayout">
+            {confirm && minutes >= 2 ? (
+              <motion.div
+                key="confirm"
+                role="alertdialog"
+                aria-label="Before you start"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.2, ease: EASE_OUT }}
+                className="rounded-2xl border border-border bg-muted/40 p-4"
+              >
+                <p className="text-sm font-medium">Before you start</p>
+                <ul className="mt-2.5 flex flex-col gap-2 text-xs text-muted-foreground">
+                  <li className="flex gap-2">
+                    <Clock className="mt-px size-3.5 shrink-0" />
+                    <span>
+                      A {minutes}-minute film takes about {eta} minutes. Keep this tab open until it's done, or production stops halfway.
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Coins className="mt-px size-3.5 shrink-0" />
+                    <span>
+                      It costs about <span className="font-medium text-foreground tabular-nums">{dollars(estimateCost(minutes, !member, resolution).total)}</span> on your fal key.
+                    </span>
+                  </li>
+                </ul>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirm(false)}
+                    className="h-10 flex-1 rounded-full border border-border text-sm transition-colors hover:border-border-strong"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => go(true)}
+                    className="inline-flex h-10 flex-[2] items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    <Clapperboard className="size-4" /> Start the film
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key="start" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
+                <StatefulButton size="lg" state={submit} onClick={() => go()} loadingText="Starting" successText="Rolling" icon={<Clapperboard className="size-4" />} className="w-full">
+                  Make the film
+                </StatefulButton>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <p className="text-center text-[11px] text-muted-foreground">
-            {busy ? "A film is in production; new ones wait in line." : `${who} · ${member ? member.style_label : styleLabel} · ${minutes} min · ready in about ${Math.round(4 + 1.5 * minutes)} min`}
+            {busy ? "A film is in production; new ones wait in line." : `${who} · ${member ? member.style_label : styleLabel} · ${minutes} min · ready in about ${eta} min`}
           </p>
           {(() => {
             const c = estimateCost(minutes, !member, resolution);
