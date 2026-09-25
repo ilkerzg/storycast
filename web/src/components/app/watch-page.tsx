@@ -3,6 +3,7 @@ import { ArrowLeft, Check, ChevronDown, Download, Eye, Film as FilmIcon, Flag, L
 import { useEffect, useMemo, useState } from "react";
 import { setAgentContext } from "@/lib/agent";
 import { AgentPromptButton } from "@/components/app/agent-button";
+import { IssueButton } from "@/components/app/issue-button";
 import { FilmPlayer } from "@/components/app/film-player";
 import { fmtDuration } from "@/components/app/film-card";
 import { Lightbox, downloadFile, type LightboxItem } from "@/components/app/lightbox";
@@ -228,6 +229,7 @@ export function WatchPage({ id, films, cast, loading }: { id: string; films: Fil
               </Button>
             )}
             {film.community && !mineShared && <ReportButton id={film.id} />}
+            {SHARING && <IssueButton film={film} />}
             <Button
               variant="ghost"
               size="icon"

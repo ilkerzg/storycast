@@ -18,6 +18,7 @@ export type AgentContext =
       characterUrl: string;
       characterName: string;
       voice: { voice_id: string; name: string } | null;
+      resolution: P.Resolution;
     }
   | { kind: "film"; film: Film };
 
@@ -89,7 +90,8 @@ async function resolve(ctx: AgentContext | null, data: StudioData) {
       }
     }
   }
-  return { topic, minutes, lang, look, customLook, narrator, uploaded, voice, voiceNote, reference };
+  const res: P.Resolution = ctx?.kind === "create" && ctx.resolution === "480P" ? "480P" : "768P";
+  return { topic, minutes, lang, look, customLook, narrator, uploaded, voice, voiceNote, reference, res };
 }
 
 export async function agentSummary(ctx: AgentContext | null) {
@@ -157,7 +159,7 @@ export async function agentBrief(ctx: AgentContext | null): Promise<string> {
     const f = r.reference;
     add(`- A new film in the manner of "${f.title} ${f.subtitle}" (${origin}/films/${f.id}), same look, narrator and voice. Ask the user for the topic (the original was: ${f.topic}).`);
   } else add(`- Topic: ${r.topic || "ask the user"}`);
-  add(`- Length: ${r.minutes} min (${blocks} blocks, ${talk} on camera)`, `- Language: ${language?.name ?? "English"}, code \`${r.lang}\`, subtitle font \`${font}\``);
+  add(`- Length: ${r.minutes} min (${blocks} blocks, ${talk} on camera)`, `- Language: ${language?.name ?? "English"}, code \`${r.lang}\`, subtitle font \`${font}\``, `- Resolution: ${r.res}`);
 
   if (r.look) {
     add(`- Look: ${r.look.label}`, `  - anchor: ${json(r.look.anchor)}`, `  - motion: ${json(r.look.motion)}`, `  - style reference image: ${styleRef}`, `  - palette: ${json(r.look.palette)}`);
@@ -297,8 +299,8 @@ export async function agentBrief(ctx: AgentContext | null): Promise<string> {
     "",
     "## 6. Shots",
     "",
-    `- T blocks: \`${P.LIPSYNC}\` \`{image_url: keyframe, audio_url: narration, resolution: "${P.RES}", enable_transcription: true}\`. Its length is the T slot.`,
-    `- V blocks: \`${P.R2V}\` \`{prompt, reference_image_urls: [keyframe, hero] (just [keyframe] without the narrator), aspect_ratio: "16:9", resolution: "${P.RES}",`,
+    `- T blocks: \`${P.LIPSYNC}\` \`{image_url: keyframe, audio_url: narration, resolution: "${r.res}", enable_transcription: true}\`. Its length is the T slot.`,
+    `- V blocks: \`${P.R2V}\` \`{prompt, reference_image_urls: [keyframe, hero] (just [keyframe] without the narrator), aspect_ratio: "16:9", resolution: "${r.res}",`,
     `  duration, prompt_expansion_mode: "disabled"}\`. duration = clamp(ceil(need) + 1, 5, 15) with need = narration + ${P.GAP} s (+ ${P.LEAD} s for the first block).`,
     `- Tail: the same with need = ${P.TAIL_DUR} s, camera "slow pull-back" and this appended to its action: ${json(P.PULL_BACK.trim())}`,
     "",
@@ -350,7 +352,7 @@ export async function agentBrief(ctx: AgentContext | null): Promise<string> {
       ].join("\n"),
     ),
     `1. Cut every shot to its segment: d = min(segment, shot length); if the shot is more than 0.05 s longer, \`${P.TRIM}\` \`{video_url, start_time: 0, duration: d}\`.`,
-    `2. \`${P.MERGE}\` \`{video_urls: [...cuts, end card clip], target_fps: ${P.FPS}, resolution: ${json(P.FRAME)}}\` → picture.`,
+    `2. \`${P.MERGE}\` \`{video_urls: [...cuts, end card clip], target_fps: ${P.FPS}, resolution: ${json(P.PICTURE[r.res])}}\` → picture.`,
     `3. \`${P.COMPOSE}\` \`{tracks}\` → \`video_url\`, times in ms:`,
     ...fence(
       "json",
@@ -366,7 +368,7 @@ export async function agentBrief(ctx: AgentContext | null): Promise<string> {
     `   If it is more than 0.3 s longer than total, \`${P.TRIM}\` it to total.`,
   );
 
-  const sub = P.subtitleInput(r.lang, font, look.palette?.accent ?? "#f0a45a");
+  const sub = P.subtitleInput(r.lang, font, look.palette?.accent ?? "#f0a45a", P.PICTURE[r.res].height);
   add(
     "",
     "## 10. Subtitles",

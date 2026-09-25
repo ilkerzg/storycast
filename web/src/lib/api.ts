@@ -87,6 +87,7 @@ export type NewJob = {
   character_name: string;
   character_id: string;
   voice: Voice | null;
+  resolution: "480P" | "768P";
 };
 
 export type Voice = {
@@ -220,6 +221,7 @@ export const api = {
       character_name: body.character_name.trim(),
       character_id: body.character_id,
       voice: v?.voice_id ? { voice_id: v.voice_id, name: v.name, gender: v.gender, age: v.age, accent: v.accent, description: v.description } : {},
+      resolution: body.resolution === "480P" ? "480P" : "768P",
     });
     rec.events.push({ t: 0, stage: "queued", msg: "Queued" });
     await saveRecord(rec);

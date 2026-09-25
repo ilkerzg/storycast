@@ -115,6 +115,8 @@ export const sharedFilm = (id: string) => {
   return call<{ film: Remote }>(`/api/films/${id}`, o ? { headers: { authorization: `Owner ${o.owner}` } } : {}).then((d) => d.film);
 };
 export const report = (id: string, reason: string) => call(`/api/films/${id}/report`, { method: "POST", body: JSON.stringify({ reason }) });
+export const reportIssue = (film: Film, kind: string, note: string, at: number) =>
+  call("/api/issues", { method: "POST", body: JSON.stringify({ film: film.id, title: `${film.title} ${film.subtitle}`.trim(), video: film.video, kind, note, at }) });
 export const countView = (id: string) => call(`/api/films/${id}/view`, { method: "POST" }).catch(() => {});
 
 export const isSharedId = (id: string) => SHARING && /^[A-Za-z0-9]{10}$/.test(id);

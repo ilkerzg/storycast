@@ -1,5 +1,6 @@
 import { shape, words } from "./director";
 
+const VIDEO: Record<string, number> = { "480P": 0.05, "768P": 0.08 };
 const PRICE = {
   video: 0.08,
   image: 0.045,
@@ -13,7 +14,7 @@ const CHARS_PER_SECOND = 15;
 
 export type CostEstimate = { total: number; video: number; images: number; sound: number; direction: number; seconds: number };
 
-export function estimateCost(minutes: number, invent = false): CostEstimate {
+export function estimateCost(minutes: number, invent = false, resolution = "768P"): CostEstimate {
   const [n, t] = shape(minutes);
   const v = n - t;
   const [vSpeech, tSpeech] = words(minutes).map((r) => {
@@ -24,7 +25,7 @@ export function estimateCost(minutes: number, invent = false): CostEstimate {
   const r2v = v * vShot + 9;
   const lipsync = t * tSpeech;
   const seconds = 1.5 + v * (vSpeech + 0.35) + t * (tSpeech + 0.35) + 8 + 4;
-  const video = (r2v + lipsync) * PRICE.video;
+  const video = (r2v + lipsync) * (VIDEO[resolution] ?? PRICE.video);
   const images = (n + 2 + (invent ? 2 : 0)) * PRICE.image;
   const sound = (v * vSpeech + t * tSpeech) * CHARS_PER_SECOND * PRICE.voice + (Math.max(30, seconds + 3) / 60) * PRICE.music;
   const direction = 0.3 + 0.15 * minutes + r2v * PRICE.separate + (v + 1) * PRICE.check + 0.05 * minutes;

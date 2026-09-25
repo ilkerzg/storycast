@@ -37,3 +37,18 @@ CREATE TABLE IF NOT EXISTS reports (
   created  INTEGER NOT NULL,
   PRIMARY KEY (film_id, ip_hash)
 );
+
+CREATE TABLE IF NOT EXISTS issues (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  film_id  TEXT NOT NULL,
+  kind     TEXT NOT NULL,
+  note     TEXT NOT NULL DEFAULT '',
+  title    TEXT NOT NULL DEFAULT '',
+  video    TEXT NOT NULL DEFAULT '',
+  at       REAL,
+  ip_hash  TEXT NOT NULL DEFAULT '',
+  created  INTEGER NOT NULL,
+  resolved INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS issues_created ON issues (resolved, created DESC);
+CREATE INDEX IF NOT EXISTS issues_ip ON issues (ip_hash, created);

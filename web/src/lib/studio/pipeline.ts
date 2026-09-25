@@ -24,8 +24,11 @@ export const FRAME_AT = "fal-ai/ffmpeg-api/extract-frame";
 export const VISION = "openrouter/router/vision";
 export const CHECKER = "google/gemini-3.8-flash";
 
-export const RES = "768P";
+export type Resolution = "480P" | "768P";
+export const RESOLUTIONS: Resolution[] = ["768P", "480P"];
+export const RES: Resolution = "768P";
 export const FRAME = { width: 1344, height: 768 };
+export const PICTURE: Record<Resolution, { width: number; height: number }> = { "768P": FRAME, "480P": { width: 840, height: 480 } };
 export const STYLE_REF_NOTE = "shows only the target art style: match its medium, linework, texture, lighting and palette; do not copy its content";
 export const WIDE = { width: 1920, height: 1088 };
 export const PORTRAIT = { width: 1088, height: 1440 };
@@ -78,7 +81,8 @@ export function endCardPrompt(title: string, subtitle: string, anchor: string) {
 
 export const shotDuration = (need: number) => Math.max(5, Math.min(15, Math.ceil(need) + 1));
 
-export function subtitleInput(lang: string, font: string, accent: string) {
+export function subtitleInput(lang: string, font: string, accent: string, height = FRAME.height) {
+  const k = height / FRAME.height;
   return {
     language: lang,
     font_name: font,
@@ -86,11 +90,11 @@ export function subtitleInput(lang: string, font: string, accent: string) {
     font_color: "white",
     highlight_color: namedColor(accent),
     stroke_color: "black",
-    stroke_width: 3,
-    font_size: 54,
+    stroke_width: Math.max(2, Math.round(3 * k)),
+    font_size: Math.round(54 * k),
     words_per_subtitle: 4,
     position: "bottom",
-    y_offset: 40,
+    y_offset: Math.round(40 * k),
     enable_animation: true,
   };
 }
@@ -105,6 +109,7 @@ export type JobInput = {
   character_name: string;
   character_id: string;
   voice: GivenVoice | Record<string, never>;
+  resolution?: Resolution;
 };
 type Spec = {
   shot: string;
@@ -185,6 +190,9 @@ export class Film {
     this.onEvent = onEvent;
   }
 
+  get res(): Resolution {
+    return this.rec.resolution === "480P" ? "480P" : "768P";
+  }
   get plan(): Plan {
     return this.st.plan!;
   }
@@ -457,7 +465,7 @@ export class Film {
     type Video = { video: { url: string }; duration?: number };
     let r: Video;
     if (spec.talking) {
-      r = await run<Video>(LIPSYNC, { image_url: spec.key_url, audio_url: b.audio_url, resolution: RES, enable_transcription: true });
+      r = await run<Video>(LIPSYNC, { image_url: spec.key_url, audio_url: b.audio_url, resolution: this.res, enable_transcription: true });
     } else {
       let need: number;
       if (spec.shot === this.plan.tail.shot) {
@@ -474,7 +482,7 @@ export class Film {
         prompt: this.motionPrompt(b, spec.with_char),
         reference_image_urls: refs,
         aspect_ratio: "16:9",
-        resolution: RES,
+        resolution: this.res,
         duration: dur,
         prompt_expansion_mode: "disabled",
       });
@@ -632,7 +640,7 @@ export class Film {
     this.log("assemble", `Cutting ${segments.length} shots on fal (trim + merge + compose)…`);
     const cut = await Promise.all(segments.map((s) => this.trimmed(s)));
 
-    const picture = (await run<{ video: { url: string } }>(MERGE, { video_urls: [...cut, this.st.card_clip], target_fps: FPS, resolution: FRAME })).video
+    const picture = (await run<{ video: { url: string } }>(MERGE, { video_urls: [...cut, this.st.card_clip], target_fps: FPS, resolution: PICTURE[this.res] })).video
       .url;
 
     const tracks = [
@@ -658,7 +666,7 @@ export class Film {
     try {
       r = await run<{ video: { url: string }; subtitle_count?: number }>(SUBTITLE, {
         video_url: clean,
-        ...subtitleInput(this.rec.lang, languages.find((l) => l.code === this.rec.lang)?.font ?? "Nunito", this.style.palette?.accent ?? "#f0a45a"),
+        ...subtitleInput(this.rec.lang, languages.find((l) => l.code === this.rec.lang)?.font ?? "Nunito", this.style.palette?.accent ?? "#f0a45a", PICTURE[this.res].height),
       });
     } catch (e) {
       if (!(e instanceof FalError)) throw e;

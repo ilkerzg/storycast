@@ -46,6 +46,8 @@ const LINKS_PER_DAY = 10;
 const EXPLORE_PER_DAY = 10;
 const SHARES_PER_DAY_ALL = 500;
 const REPORTS_TO_REVIEW = 3;
+const ISSUES_PER_DAY = 20;
+const ISSUE_KINDS = ["voice", "edit", "picture", "subtitles", "story", "other"];
 const REFUSE_BELOW = 0.2;
 const REVIEW_BELOW = 0.7;
 
@@ -498,6 +500,26 @@ async function report(req: Request, env: Env, id: string) {
   return json({ ok: true }, req, env);
 }
 
+async function issue(req: Request, env: Env) {
+  if (!Object.keys(cors(req, env)).length) throw new HttpError(403, "not allowed");
+  const body = (await req.json().catch(() => ({}))) as { film?: unknown; kind?: unknown; note?: unknown; at?: unknown; title?: unknown; video?: unknown };
+  const film = str(body.film, 16);
+  const kind = str(body.kind, 16);
+  if (!/^[A-Za-z0-9]{8,10}$/.test(film) || !ISSUE_KINDS.includes(kind)) throw new HttpError(400, "bad report");
+  const at = num(body.at);
+  const own = typeof body.video === "string" && body.video.startsWith(new URL(req.url).origin + "/m/") ? body.video.slice(0, 300) : "";
+  const video = falUrl(body.video) ?? own;
+  const ip = await ipHash(req, env);
+  const t = now();
+  const added = await env.DB.prepare(
+    "INSERT INTO issues (film_id, kind, note, title, video, at, ip_hash, created) SELECT ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM issues WHERE ip_hash = ? AND created > ?) < ?",
+  )
+    .bind(film, kind, str(body.note, 1000).trim(), str(body.title, 200), video, at > 0 ? Math.round(at * 10) / 10 : null, ip, t, ip, t - DAY, ISSUES_PER_DAY)
+    .run();
+  if (!added.meta.changes) throw new HttpError(429, "you have sent a lot of reports today");
+  return json({ ok: true }, req, env, 201);
+}
+
 const statusCache = new Map<string, { status: Status | null; at: number }>();
 async function filmStatus(env: Env, id: string) {
   const hit = statusCache.get(id);
@@ -596,6 +618,7 @@ async function route(req: Request, env: Env, ctx: ExecutionContext): Promise<Res
   if ((m === "GET" || m === "HEAD") && path.startsWith("/m/media/")) return serveMedia(req, env, ctx, decodeURIComponent(path.slice(3)));
 
   if (path === "/api/share" && m === "POST") return share(req, env);
+  if (path === "/api/issues" && m === "POST") return issue(req, env);
   if (path.startsWith("/api/voices") && m === "GET") return voices(req, env, path);
   if (path === "/api/quota" && m === "GET") {
     const q = await quota(env, await ipHash(req, env));

@@ -25,6 +25,8 @@ import { EASE_OUT } from "@/lib/ease";
 import { cn } from "@/lib/utils";
 import { api, type Config, type NewJob, type Voice } from "@/lib/api";
 import { dollars, estimateCost } from "@/lib/studio/cost";
+import { Tabs, TabsList, TabsTrigger } from "@/components/motion/tabs";
+import type { Resolution } from "@/lib/studio/pipeline";
 
 const POPULAR = ["en", "tr", "es", "fr", "de", "pt", "ar", "hi", "zh", "ja", "ko", "ru"];
 const IDEAS = ["Why is the sky blue?", "How do bees make honey?", "The first photograph", "How do volcanoes work?"];
@@ -128,6 +130,7 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
   });
   const [custom, setCustom] = useState<CustomStyle | null>(null);
   const [minutes, setMinutes] = useState(1);
+  const [resolution, setResolution] = useState<Resolution>("768P");
   const [language, setLanguage] = useState("en");
   const [character, setCharacter] = useState<Character | null>(null);
   const [charName, setCharName] = useState("");
@@ -152,8 +155,9 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
       characterUrl: choice.kind === "upload" ? (character?.url ?? "") : "",
       characterName: choice.kind === "upload" ? charName.trim() : "",
       voice: voice ? { voice_id: voice.voice_id, name: voice.name } : null,
+      resolution,
     });
-  }, [topic, style, custom, minutes, language, member, choice, character, charName, voice]);
+  }, [topic, style, custom, minutes, language, member, choice, character, charName, voice, resolution]);
   useEffect(() => () => setAgentContext(null), []);
 
   async function uploadStyle(file: File) {
@@ -206,6 +210,7 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
         character_name: choice.kind === "upload" ? charName.trim() : "",
         character_id: member?.id ?? "",
         voice,
+        resolution,
       });
       setSubmit("success");
       setTimeout(() => setSubmit("idle"), 1600);
@@ -305,6 +310,16 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
         </div>
 
         <div>
+          <Label aside={<span className="text-[11px] text-muted-foreground">{resolution === "480P" ? "Softer picture, lower price" : "Sharper picture"}</span>}>Quality</Label>
+          <Tabs value={resolution} onValueChange={(v) => setResolution(v as Resolution)} variant="segment">
+            <TabsList>
+              <TabsTrigger value="768P">768p</TabsTrigger>
+              <TabsTrigger value="480P">480p</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div>
           <Label>Voice</Label>
           <VoiceField
             value={voice}
@@ -323,7 +338,7 @@ export function CreateForm({ config, busy, onStart, onError }: Props) {
             {busy ? "A film is in production; new ones wait in line." : `${who} · ${member ? member.style_label : styleLabel} · ${minutes} min · ready in about ${Math.round(4 + 1.5 * minutes)} min`}
           </p>
           {(() => {
-            const c = estimateCost(minutes, !member);
+            const c = estimateCost(minutes, !member, resolution);
             return (
               <p className="text-center text-[11px] text-muted-foreground">
                 About{" "}
