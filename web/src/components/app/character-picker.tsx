@@ -67,14 +67,14 @@ export function CharacterPicker({ cast, groups, value, onChange, uploadPreview, 
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a character" className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground" />
         </label>
       </div>
-      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9">
+      <div className="grid grid-cols-3 items-start gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         <button type="button" onClick={() => onChange({ kind: "new" })} aria-pressed={value.kind === "new"} className="relative text-left">
-          <div className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong bg-card px-2 text-center transition-colors hover:border-primary/60">
-            <span className="flex size-9 items-center justify-center rounded-full bg-muted">
+          <div className="flex aspect-[3/4] min-h-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-dashed border-border-strong bg-card px-2 text-center transition-colors hover:border-primary/60">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
               <Sparkles className="size-4 text-accent" />
             </span>
-            <span className="text-[12.5px] font-semibold">Invent one</span>
-            <span className="text-[10.5px] leading-snug text-muted-foreground">A new character for your topic, in any look</span>
+            <span className="text-[12.5px] leading-tight font-semibold">Invent one</span>
+            <span className="line-clamp-3 text-[10.5px] leading-snug text-muted-foreground">A new character for your topic, in any look</span>
           </div>
           {value.kind === "new" && <Ring />}
         </button>
@@ -82,18 +82,18 @@ export function CharacterPicker({ cast, groups, value, onChange, uploadPreview, 
         <button type="button" onClick={() => onChange({ kind: "upload" })} aria-pressed={value.kind === "upload"} className="relative text-left">
           <div
             className={cn(
-              "relative flex aspect-[3/4] flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-dashed border-border-strong bg-card px-2 text-center transition-colors hover:border-primary/60",
+              "relative flex aspect-[3/4] min-h-0 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-xl border border-dashed border-border-strong bg-card px-2 text-center transition-colors hover:border-primary/60",
             )}
           >
             {uploadPreview ? (
               <img src={uploadPreview} alt="" className="absolute inset-0 size-full object-cover" />
             ) : (
               <>
-                <span className="flex size-9 items-center justify-center rounded-full bg-muted">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
                   <ImagePlus className="size-4" />
                 </span>
-                <span className="text-[12.5px] font-semibold">Your own</span>
-                <span className="text-[10.5px] leading-snug text-muted-foreground">Upload a character, we redraw it</span>
+                <span className="text-[12.5px] leading-tight font-semibold">Your own</span>
+                <span className="line-clamp-3 text-[10.5px] leading-snug text-muted-foreground">Upload a character, we redraw it</span>
               </>
             )}
           </div>
